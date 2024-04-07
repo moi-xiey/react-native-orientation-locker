@@ -28,7 +28,7 @@ v1.4.0
 1. Fix typescript types
 2. Fix some bugs
 
-v1.3.1 
+v1.3.1
 1. Fix require cycle problem
 
 v1.3.0 **BREAKING CHANGES**
@@ -83,7 +83,7 @@ v1.1.1
  2. Fix getAutoRotateState() code error
 
 
-v1.1.0 **BREAKING CHANGES**  
+v1.1.0 **BREAKING CHANGES**
  1. Split ```addOrientationListener(function(orientation, deviceOrientation))``` to ```addOrientationListener(function(orientation))``` and ```addDeviceOrientationListener(function(deviceOrientation))```
  2. Make sure when lockToXXX and unlockAllOrientations resend UI orientation event
  3. remove setTimout from orientation listener
@@ -95,14 +95,14 @@ v1.1.0 **BREAKING CHANGES**
 
 ### Notice
 
-1. RN 0.58 + Android target SDK 27 maybe cause 
-```Issue: java.lang.IllegalStateException: Only fullscreen activities can request orientation``` problem, 
+1. RN 0.58 + Android target SDK 27 maybe cause
+```Issue: java.lang.IllegalStateException: Only fullscreen activities can request orientation``` problem,
 see [[#55]](https://github.com/wonday/react-native-orientation-locker/issues/55) for a solution.
 
 2. orientationDidChange will be delayed on iPads if we set upside down to true.
 Simply disable upside down for iPad and everything works like a charm ([[#78]](https://github.com/wonday/react-native-orientation-locker/issues/78) Thanks [truongluong1314520](https://github.com/truongluong1314520))
 
-3. If you get the following build error on iOS: 
+3. If you get the following build error on iOS:
 ```ld: library not found for -lRCTOrientation-tvOS```
 Just remove it from linked libraries and frameworks
 
@@ -111,7 +111,7 @@ Just remove it from linked libraries and frameworks
 5. For Windows, getting information on device orientation and tracking its changes will only be possible on devices with an orientation sensor. If the device running your application does not have the appropriate hardware to support tracking device orientation, `getDeviceOrientation()` will return UNKNOWN.
 
 #### To run example on Windows Tablet (This will allow one to view modules full functionality)
-1. Open example/windows/example.sln in Visual Studio. 
+1. Open example/windows/example.sln in Visual Studio.
 2. Go to Project > Publish > Create App Packages.
 3. Certificate password is "password".
 4. Select "Sideloading" and hit "Next".
@@ -119,7 +119,7 @@ Just remove it from linked libraries and frameworks
 6. Choose desired output location and hit "Create".
 7. Got to output location and copy example_<version>_Test directory over to tablet device.
 8. On tablet device open APPXBUNDLE File and hit "Install" (make sure tablet is in developer mode). App should launch after install is complete.
-9. Turn on tablet mode on device to see locking to a UI orientation functionality. 
+9. Turn on tablet mode on device to see locking to a UI orientation functionality.
 
 ### Installation
 #### Using yarn (RN 0.60 and and above)
@@ -262,6 +262,8 @@ import Orientation from 'react-native-orientation-locker';
   },
 
   componentDidMount() {
+    // init sdk  Only need android other platforms can ignore
+    Orientation.init();
 
     Orientation.getAutoRotateState((rotationLock) => this.setState({rotationLock}));
     //this allows to check if the system autolock is enabled or not.

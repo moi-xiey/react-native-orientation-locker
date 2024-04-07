@@ -41,6 +41,14 @@ export default class Orientation {
     });
   };
 
+  static init = () => {
+
+  };
+
+  static removeInit = () => {
+
+  };
+
   static getDeviceOrientation = cb => {
     OrientationNative.getDeviceOrientation(deviceOrientation => {
       cb(deviceOrientation);

@@ -41,7 +41,7 @@ import javax.annotation.Nullable;
 public class OrientationModule extends ReactContextBaseJavaModule implements OrientationListeners {
 
     final BroadcastReceiver mReceiver;
-    final OrientationEventListener mOrientationListener;
+    private OrientationEventListener mOrientationListener;
     final ReactApplicationContext ctx;
     private boolean isLocked = false;
     private boolean isConfigurationChangeReceiverRegistered = false;
@@ -52,6 +52,63 @@ public class OrientationModule extends ReactContextBaseJavaModule implements Ori
         super(reactContext);
         ctx = reactContext;
 
+        mReceiver = new BroadcastReceiver() {
+            @Override
+            public void onReceive(Context context, Intent intent) {
+
+                String orientationValue = getCurrentOrientation();
+                lastOrientationValue = orientationValue;
+
+                FLog.d(ReactConstants.TAG,"Orientation changed to " + orientationValue);
+
+                WritableMap params = Arguments.createMap();
+                params.putString("orientation", orientationValue);
+                if (ctx.hasActiveCatalystInstance()) {
+                    ctx
+                    .getJSModule(DeviceEventManagerModule.RCTDeviceEventEmitter.class)
+                    .emit("orientationDidChange", params);
+                }
+
+            }
+        };
+        OrientationActivityLifecycle.getInstance().registerListeners(this);
+    }
+
+    @Override
+    public String getName() {
+        return "Orientation";
+    }
+
+    private String getCurrentOrientation() {
+
+        final Display display = ((WindowManager) getReactApplicationContext().getSystemService(Context.WINDOW_SERVICE)).getDefaultDisplay();
+
+        switch (display.getRotation()) {
+            case Surface.ROTATION_0:
+                return "PORTRAIT";
+            case Surface.ROTATION_90:
+                return "LANDSCAPE-LEFT";
+            case Surface.ROTATION_180:
+                return "PORTRAIT-UPSIDEDOWN";
+            case Surface.ROTATION_270:
+                return "LANDSCAPE-RIGHT";
+        }
+        return "UNKNOWN";
+    }
+
+    @ReactMethod
+    public void getOrientation(Callback callback) {
+        String orientation = getCurrentOrientation();
+        callback.invoke(orientation);
+    }
+
+    @ReactMethod
+    public void getDeviceOrientation(Callback callback) {
+        callback.invoke(lastDeviceOrientationValue);
+    }
+
+    @ReactMethod
+    public void init() {
         mOrientationListener = new OrientationEventListener(reactContext, SensorManager.SENSOR_DELAY_UI) {
 
             @Override
@@ -113,60 +170,15 @@ public class OrientationModule extends ReactContextBaseJavaModule implements Ori
            FLog.d(ReactConstants.TAG, "orientation detect disabled.");
            mOrientationListener.disable();
         }
-
-        mReceiver = new BroadcastReceiver() {
-            @Override
-            public void onReceive(Context context, Intent intent) {
-
-                String orientationValue = getCurrentOrientation();
-                lastOrientationValue = orientationValue;
-
-                FLog.d(ReactConstants.TAG,"Orientation changed to " + orientationValue);
-
-                WritableMap params = Arguments.createMap();
-                params.putString("orientation", orientationValue);
-                if (ctx.hasActiveCatalystInstance()) {
-                    ctx
-                    .getJSModule(DeviceEventManagerModule.RCTDeviceEventEmitter.class)
-                    .emit("orientationDidChange", params);
-                }
-
-            }
-        };
-        OrientationActivityLifecycle.getInstance().registerListeners(this);
     }
 
-    @Override
-    public String getName() {
-        return "Orientation";
-    }
-
-    private String getCurrentOrientation() {
-
-        final Display display = ((WindowManager) getReactApplicationContext().getSystemService(Context.WINDOW_SERVICE)).getDefaultDisplay();
-
-        switch (display.getRotation()) {
-            case Surface.ROTATION_0:
-                return "PORTRAIT";
-            case Surface.ROTATION_90:
-                return "LANDSCAPE-LEFT";
-            case Surface.ROTATION_180:
-                return "PORTRAIT-UPSIDEDOWN";
-            case Surface.ROTATION_270:
-                return "LANDSCAPE-RIGHT";
+    @ReactMethod
+    public void removeInit() {
+        // 停止监听并释放资源
+        if (mOrientationListener != null) {
+            mOrientationListener.disable();
+            mOrientationListener = null; // 释放资源
         }
-        return "UNKNOWN";
-    }
-
-    @ReactMethod
-    public void getOrientation(Callback callback) {
-        String orientation = getCurrentOrientation();
-        callback.invoke(orientation);
-    }
-
-    @ReactMethod
-    public void getDeviceOrientation(Callback callback) {
-        callback.invoke(lastDeviceOrientationValue);
     }
 
     @ReactMethod
@@ -354,7 +366,9 @@ public class OrientationModule extends ReactContextBaseJavaModule implements Ori
     @Override
     public void start() {
         FLog.i(ReactConstants.TAG, "orientation detect enabled.");
-        mOrientationListener.enable();
+        if (mOrientationListener != null) {
+            mOrientationListener.enable();
+        }
         compatRegisterReceiver(ctx, mReceiver, new IntentFilter("onConfigurationChanged"), false);
         isConfigurationChangeReceiverRegistered = true;
     }
@@ -362,7 +376,9 @@ public class OrientationModule extends ReactContextBaseJavaModule implements Ori
     @Override
     public void stop() {
         FLog.d(ReactConstants.TAG, "orientation detect disabled.");
-        mOrientationListener.disable();
+        if (mOrientationListener != null) {
+            mOrientationListener.disable();
+        }
         try {
             if (isConfigurationChangeReceiverRegistered) {
                 ctx.unregisterReceiver(mReceiver);
@@ -376,7 +392,9 @@ public class OrientationModule extends ReactContextBaseJavaModule implements Ori
     @Override
     public void release() {
         FLog.d(ReactConstants.TAG, "orientation detect disabled.");
-        mOrientationListener.disable();
+        if (mOrientationListener != null) {
+            mOrientationListener.disable();
+        }
 
         final Activity activity = getCurrentActivity();
         if (activity == null) return;
@@ -420,4 +438,3 @@ public class OrientationModule extends ReactContextBaseJavaModule implements Ori
     }
 }
 
-  

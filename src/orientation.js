@@ -15,6 +15,10 @@ export default class Orientation {
     cb("UNKNOWN");
   };
 
+  static init = () => {};
+
+  static removeInit = () => {};
+
   static getDeviceOrientation = cb => {
     cb("UNKNOWN");
   };
